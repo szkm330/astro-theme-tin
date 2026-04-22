@@ -1,0 +1,61 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const posts = await getCollection('blog');
+
+// 按年份分组
+const postsByYear: Record<number, typeof posts> = {};
+posts.forEach((post) => {
+  const year = post.data.pubDate.getFullYear();
+  if (!postsByYear[year]) {
+    postsByYear[year] = [];
+  }
+  postsByYear[year].push(post);
+});
+
+// 按年份降序排列
+const years = Object.keys(postsByYear)
+  .map(Number)
+  .sort((a, b) => b - a);
+
+// 每年的文章按日期降序排列
+years.forEach((year) => {
+  postsByYear[year].sort(
+    (a, b) => new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime()
+  );
+});
+---
+
+<BaseLayout title="Archives">
+  <main class="py-12">
+    <h1 class="text-3xl font-normal mb-8">Archives</h1>
+    
+    {years.length > 0 ? (
+      <div class="space-y-8">
+        {years.map((year) => (
+          <section>
+            <h2 class="text-lg font-semibold mb-2 text-zinc-900">{year}</h2>
+            <ul class="space-y-1">
+              {postsByYear[year].map((post) => (
+                <li class="flex items-baseline gap-4">
+                  <span class="text-zinc-400 text-sm tabular-nums shrink-0">
+                    {String(post.data.pubDate.getMonth() + 1).padStart(2, '0')}-{String(post.data.pubDate.getDate()).padStart(2, '0')}
+                  </span>
+                  <a
+                    href={`/${post.data.slug}`}
+                    class="hover:text-zinc-900 transition-colors"
+                  >
+                    {post.data.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
+    ) : (
+      <p class="text-zinc-500">No posts yet</p>
+    )}
+  </main>
+</BaseLayout>

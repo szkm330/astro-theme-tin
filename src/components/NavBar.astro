@@ -1,0 +1,160 @@
+---
+import { siteConfig } from '../config';
+---
+<nav class="max-w-4xl mx-auto px-6 py-6">
+  <div class="border border-zinc-200 rounded-xl px-6 py-4 bg-white/50 backdrop-blur-sm">
+    <div class="flex items-center gap-6">
+      <!-- Logo -->
+      <a href="/" class="shrink-0 hover:opacity-70 transition-opacity">
+        <img src={siteConfig.site.logo} alt={siteConfig.site.title} class="h-8 w-8" />
+      </a>
+
+      <!-- 导航链接 -->
+      <div class="flex items-center gap-8 ml-auto shrink-0">
+        <a
+          href="/tags"
+          class="text-sm font-medium text-zinc-500 hover:text-zinc-900 relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-0.5 after:bg-zinc-900 after:transition-all hover:after:w-full"
+        >
+          Tags
+        </a>
+
+        <a
+          href="/archives"
+          class="text-sm font-medium text-zinc-500 hover:text-zinc-900 relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-0.5 after:bg-zinc-900 after:transition-all hover:after:w-full"
+        >
+          Archives
+        </a>
+
+        <a
+          href="/about"
+          class="text-sm font-medium text-zinc-500 hover:text-zinc-900 relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-0.5 after:bg-zinc-900 after:transition-all hover:after:w-full"
+        >
+          About
+        </a>
+
+        <!-- 工具下拉菜单 -->
+        <div class="relative">
+          <button
+            id="tools-button"
+            class="text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors flex items-center gap-1.5"
+          >
+            Tools
+            <svg id="tools-arrow" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+
+          <div
+            id="tools-dropdown"
+            class="hidden absolute right-0 top-full mt-3 w-40 opacity-0 transition-all duration-200 transform origin-top scale-95"
+          >
+            <div class="bg-white rounded-lg shadow-lg border border-zinc-200 overflow-hidden">
+              <button
+                id="newPostBtn"
+                class="w-full text-left px-5 py-3.5 text-sm text-zinc-600 hover:bg-zinc-50 transition-colors border-b border-zinc-100"
+              >
+                New Post
+              </button>
+              <button
+                id="copyTimestampBtn"
+                class="w-full text-left px-5 py-3.5 text-sm text-zinc-600 hover:bg-zinc-50 transition-colors"
+              >
+                Get Timestamp
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<script>
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const toolsButton = document.getElementById('tools-button');
+    const toolsDropdown = document.getElementById('tools-dropdown');
+    const toolsArrow = document.getElementById('tools-arrow');
+
+    if (toolsButton && toolsDropdown && toolsArrow) {
+      toolsButton.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const isHidden = toolsDropdown.classList.toggle('hidden');
+        setTimeout(() => {
+          toolsDropdown.classList.toggle('opacity-0', isHidden);
+          toolsDropdown.classList.toggle('scale-95', isHidden);
+          toolsArrow.classList.toggle('rotate-180', !isHidden);
+        }, 0);
+      });
+
+      window.addEventListener('click', () => {
+        if (!toolsDropdown.classList.contains('hidden')) {
+          toolsDropdown.classList.add('hidden', 'opacity-0', 'scale-95');
+          toolsArrow.classList.remove('rotate-180');
+        }
+      });
+    }
+  });
+
+
+  function generateSlug(): string {
+    return Array.from({ length: 8 }, () =>
+      Math.floor(Math.random() * 16).toString(16)
+    ).join('');
+  }
+
+  function formatDate(date: Date): string {
+  	const pad = (n: number) => String(n).padStart(2, '0');
+  	const yyyy = date.getFullYear();
+  	const MM = pad(date.getMonth() + 1);
+  	const dd = pad(date.getDate());
+  	return `${yyyy}-${MM}-${dd}`;
+	}
+
+  function getTimestamp(): string {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const yyyy = now.getFullYear();
+    const MM = pad(now.getMonth() + 1);
+    const dd = pad(now.getDate());
+    const HH = pad(now.getHours());
+    const mm = pad(now.getMinutes());
+    const ss = pad(now.getSeconds());
+    return `${yyyy}${MM}${dd}${HH}${mm}${ss}`;
+  }
+
+  document.getElementById('newPostBtn')?.addEventListener('click', () => {
+    const now = new Date();
+    const slug = generateSlug();
+    const pubDate = formatDate(now);
+
+    const content = `---
+slug: "${slug}"
+title: ""
+pubDate: "${pubDate}"
+description: ""
+tags: []
+---
+
+`;
+
+    const blob = new Blob([content], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${slug}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('copyTimestampBtn')?.addEventListener('click', async () => {
+    const timestamp = getTimestamp();
+    try {
+      await navigator.clipboard.writeText(timestamp);
+    } catch (err) {
+      console.error('Copy failed:', err);
+    }
+  });
+
+
+</script>

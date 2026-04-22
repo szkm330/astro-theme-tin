@@ -1,0 +1,36 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const posts = await getCollection('blog');
+const tagsWithCount: Record<string, number> = {};
+posts.forEach(p => {
+  (p.data.tags ?? []).forEach((tag: string) => {
+    const t = tag.toLowerCase();
+    tagsWithCount[t] = (tagsWithCount[t] || 0) + 1;
+  });
+});
+const sortedTags = Object.entries(tagsWithCount)
+  .sort(([, a], [, b]) => b - a);
+---
+
+<BaseLayout title="Tags">
+  <main class="py-12">
+    <h1 class="text-3xl font-normal mb-8">Tags</h1>
+
+    <div class="space-y-4">
+      <p class="text-zinc-500">{sortedTags.length} tags total</p>
+
+      <div class="flex flex-wrap gap-3">
+        {sortedTags.map(([tag, count]) => (
+          <a
+            href={`/tags/${tag}`}
+            class="px-4 py-2 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 rounded-lg transition-colors"
+          >
+            {tag} <span class="text-zinc-500">({count})</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </main>
+</BaseLayout>
